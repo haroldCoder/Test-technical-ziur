@@ -1,10 +1,19 @@
 using Test_technical_ziur.Components;
+using Test_technical_ziur.core.utils;
+
+DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient<HttpRequestApi>(client =>
+{
+    client.BaseAddress = new Uri("https://mainserver.ziursoftware.com/Ziur.API/basedatos_01/ZiurServiceRest.svc/api/"); // Aqui agregamos la uri a la cual necesitamos hacerle las peticiones
+    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {Environment.GetEnvironmentVariable("API_BEARER_TOKEN")}"); // Aqui usamos el bearerToken, en este caso lo ponemos en las variables de entorno para mayor seguridad, y solo lo puedan ver personas de la prueba tecnica.
+});
 
 var app = builder.Build();
 
