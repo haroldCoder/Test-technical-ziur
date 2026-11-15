@@ -10,14 +10,22 @@
 
 @if (loading) @* Aqui manejamos los estados de la peticion, si esta en pendiente(cargando) o si ocurre algun error *@
 {
-    <p>Cargando...</p>
+    <div class="d-flex flex-column justify-content-center align-items-center gap-3 py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-secondary mb-0">Cargando movimientos...</p>
+    </div>
 }
 else if (error is not null)
 {
-    <p class="text-danger">@error</p>
+    <div class="alert alert-danger" role="alert">
+        @error
+    </div>
 }
 else
 {
+    var items = FilteredMovements.ToList();
     <div class="d-flex justify-content-end align-items-center gap-2 mb-3"> @* Aqui en este div separo lo que es tema de filtro en este caso buscar por codigo o descripcion, asi como tambien ordenamiento por codigo*@
         <input type="text"
                class="form-control w-auto"
@@ -35,18 +43,35 @@ else
         </button>
     </div>
 
-   <div>
-            @foreach (var m in FilteredMovements) @* Usamos la funcion FilteredMovements, la cual nos va a retornar varios movimientos, es decir un enumerable de todos estos datos, por lo cual lo puedo trabajar con un forEach para recorrerlos*@
+    @if (items.Count == 0) // este en caso de que la api no tenga errores, pero no tenga datos cargados
+    {
+        <p class="text-center text-secondary py-5">No se encontraron movimientos</p>
+    }
+    else
+    {
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 p-5">
+            @foreach (var m in items)@* Usamos la funcion FilteredMovements, la cual nos va a retornar varios movimientos, es decir un enumerable de todos estos datos, por lo cual lo puedo trabajar con un forEach para recorrerlos*@
             {
-                <ul> @* Para este commit voy a decidir sacar los datos en una lista, en el proximo creare la Grilla y mejorare la UX/UI *@
-                    <li>@m.Code - @m.Description</li>
-                </ul>
+                <div class="col">
+                    <div class="card h-100 @(m.Active ? "border-success" : "border-danger") p-2">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <span class="d-inline-block rounded-circle @(m.Active ? "bg-success" : "bg-danger")"
+                            style="width: 10px; height: 10px;"></span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-secondary">@m.Code</h6>
+                            <p class="card-text">@m.Description</p>
+                        </div>
+                    </div>
+                </div>
             }
-            @if (!FilteredMovements.Any())  @* Si la busqueda no coincide con ningun movimiento*@
+            @if (!FilteredMovements.Any())@* Si la busqueda no coincide con ningun movimiento*@
             {
-               <p>Sin resultados</p>
+                <p>Sin resultados</p>
             }
-    </div>
+        </div>
+    }
 }
 
 @code {
