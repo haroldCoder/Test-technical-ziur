@@ -2,22 +2,22 @@
 {
     public class MovementsEntity
     {
-        public string Code { get; private set; }
+        public int Code { get; private set; } // aqui tambien lo corrijo ya que es parte de la equivocacion, claro que nos podria servir mas si se queda como un string, ya que como necesitamos hacer busqueda por este necesitamos el contains; Pero para no hacerlo dificil dejemoslo tambien en number
         public string Description { get; private set; }
         public bool Active { get; private set; }
 
-        private MovementsEntity(string code, string description, bool active = false)
+        private MovementsEntity(int code, string description, bool active = false)
         {
             Code = code;
             Description = description;
             Active = active;
         }
 
-        public static MovementsEntity create(string code, string description, bool active)
+        public static MovementsEntity create(int code, string description, bool active)
         {
-            if (string.IsNullOrWhiteSpace(code))
+            if (code <= 0)
             {
-                throw new Exception("El codigo es requerido!");
+                throw new Exception("El código es requerido y debe ser mayor a cero.");
             }
 
             if (string.IsNullOrWhiteSpace(description))

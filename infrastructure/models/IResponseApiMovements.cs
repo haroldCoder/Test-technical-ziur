@@ -2,7 +2,7 @@
 {
     public interface IResponseApiMovements
     {
-         string Codigo { get; set; }
+         int Codigo { get; set; }
          string Descripcion { get; set; }
          bool VActiva { get; set; }
     }

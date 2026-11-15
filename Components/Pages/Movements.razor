@@ -1,0 +1,104 @@
+﻿@* Este seria el nombre de la vista *@
+@page "/movimientos"
+@rendermode InteractiveServer
+@using Test_technical_ziur.application.use_cases
+@using Test_technical_ziur.domain.entities
+@using Test_technical_ziur.domain.exceptions
+
+@* Inyectamos el caso de uso principal para poder traer todos los movimientos *@
+@inject GetAllMovementsUseCase getAllMovements
+
+@if (loading) @* Aqui manejamos los estados de la peticion, si esta en pendiente(cargando) o si ocurre algun error *@
+{
+    <p>Cargando...</p>
+}
+else if (error is not null)
+{
+    <p class="text-danger">@error</p>
+}
+else
+{
+    <div class="d-flex justify-content-end align-items-center gap-2 mb-3"> @* Aqui en este div separo lo que es tema de filtro en este caso buscar por codigo o descripcion, asi como tambien ordenamiento por codigo*@
+        <input type="text"
+               class="form-control w-auto"
+               placeholder="Buscar..."
+               @bind="search"
+               @bind:event="oninput" />
+
+        <select class="form-select w-auto" @bind="sortColumn">
+            <option value="Code">Ordenar por código</option>
+            <option value="Description">Ordenar por descripción</option>
+        </select>
+
+        <button class="btn btn-outline-secondary" @onclick="ToggleDirection">
+            @(ascending ? "↑ Asc" : "↓ Desc")
+        </button>
+    </div>
+
+   <div>
+            @foreach (var m in FilteredMovements) @* Usamos la funcion FilteredMovements, la cual nos va a retornar varios movimientos, es decir un enumerable de todos estos datos, por lo cual lo puedo trabajar con un forEach para recorrerlos*@
+            {
+                <ul> @* Para este commit voy a decidir sacar los datos en una lista, en el proximo creare la Grilla y mejorare la UX/UI *@
+                    <li>@m.Code - @m.Description</li>
+                </ul>
+            }
+            @if (!FilteredMovements.Any())  @* Si la busqueda no coincide con ningun movimiento*@
+            {
+               <p>Sin resultados</p>
+            }
+    </div>
+}
+
+@code {
+    private List<MovementsEntity> movements = []; // aqui guardare todos los movimientos
+    private bool loading = true; // estas dos variables seran los estados de las peticiones
+    private string? error;
+
+    private string search = string.Empty; // Estas tres variables las usare para los filtros
+    private string sortColumn = "Code";
+    private bool ascending = true;
+
+    private IEnumerable<MovementsEntity> FilteredMovements
+    {
+        get
+        {
+            var query = movements.AsEnumerable(); // usamos AsEnumerable, para no tocar movements como tal sino aplicar los filtros sobre el query
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+
+                query = query.Where(m =>
+                    // el codigo como originalmente es un entero, entonces lo comparamos como una cadena para ver si contiene lo que buscamos
+                    m.Code.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    m.Description.Contains(term, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return (sortColumn, ascending) switch
+            {
+                ("Description", true) => query.OrderBy(m => m.Description),
+                ("Description", false) => query.OrderByDescending(m => m.Description),
+                (_, true) => query.OrderBy(m => m.Code), // aqui estamos ordenando por los demas valores, como description ya se calculo, entonces elije el ultimo que seria el code
+                _ => query.OrderByDescending(m => m.Code)
+            };
+        }
+    }
+
+    private void ToggleDirection() => ascending = !ascending; // aqui creamos una funcion, la cual crea un switch de la vida real,con codigo sencillo, el cual por cada vez que se le de click entonces cambia al valor contrario
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            movements = await getAllMovements.executeAsync(); // apenas se inicie la vista los movimientos se llenan con el caso de uso que trae todos los movimientos
+        }
+        catch (MovementsException ex)
+        {
+            error = ex.Message; // Si ocurre algun error lo captura
+        }
+        finally
+        {
+            loading = false; // cuando todo termine el loading debe estar en false, para mostrar ya sea error o ya sean datos
+        }
+    }
+}

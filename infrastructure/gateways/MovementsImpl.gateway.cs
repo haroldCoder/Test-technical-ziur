@@ -27,6 +27,7 @@ namespace Test_technical_ziur.infrastructure.gateways
             }
             catch (JsonException ex) // Esta excepcion es en caso de que la api no devuelva los datos en formato json
             {
+                Console.WriteLine(ex.Message);
                 throw new MovementsException("La API devolvió datos con un formato inesperado.", ex);
             }
         }
