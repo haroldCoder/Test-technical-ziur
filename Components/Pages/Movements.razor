@@ -26,6 +26,8 @@ else if (error is not null)
 else
 {
     var items = FilteredMovements.ToList();
+    var rows = items.Chunk(4).ToList();
+
     <div class="container-xl py-4">
 
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
@@ -59,9 +61,21 @@ else
     }
     else
     {
+        @*
+            Virtualize: solo renderiza en el DOM las filas visibles en pantalla (más un margen),
+            en lugar de las N filas completas. Mejora el rendimiento con listas grandes.
 
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 p-5">
-            @foreach (var m in items)@* Usamos la funcion FilteredMovements, la cual nos va a retornar varios movimientos, es decir un enumerable de todos estos datos, por lo cual lo puedo trabajar con un forEach para recorrerlos*@
+            - Items          → colección en memoria (List<T[]>). Cada elemento es UNA FILA de tarjetas,
+                               no una tarjeta individual, porque la grilla tiene varias columnas.
+            - Context="row"  → nombre de la variable de cada elemento (un arreglo de hasta 4 movimientos).
+            - ItemSize="100" → alto aproximado (px) de una fila, incluyendo el espaciado (g-3).
+                               Si no coincide con el real, la barra de scroll puede "saltar".
+            - OverscanCount  → filas extra que se renderizan fuera de la vista (arriba y abajo)
+                               para evitar parpadeos al hacer scroll rápido.
+        *@
+        <Virtualize Items="rows" Context="row" ItemSize="100" OverscanCount="2"> @* Aqui se crea el *@
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 p-3">
+            @foreach (var m in row)@* Usamos la funcion FilteredMovements, la cual nos va a retornar varios movimientos, es decir un enumerable de todos estos datos, por lo cual lo puedo trabajar con un forEach para recorrerlos*@
             {
                     <div class="col">
                         <div class="card movement-card h-100 shadow-sm border-start border-2 @(m.Active ? "border-success" : "border-danger")">
@@ -89,9 +103,10 @@ else
                 <p>Sin resultados</p>
             }
         </div>
-        
+            </Virtualize>
         }
     </div>
+    
 }
 
 @code {
